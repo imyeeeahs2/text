@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Phrase Copier",
+  "description": "An application to create a list of up to 20 phrases, each with a 30-character limit, and copy them all at once.",
+  "requestFramePermissions": []
+}
