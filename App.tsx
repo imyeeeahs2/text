@@ -60,7 +60,7 @@ const App: React.FC = () => {
 
     const renderSetupScreen = () => (
         <div className="w-full max-w-md mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 text-center space-y-6 animate-fade-in">
-            <h1 className="text-3xl font-bold text-white">문구 복사기</h1>
+            <h1 className="text-3xl font-bold text-white">포토북 문구 생성</h1>
             <p className="text-slate-400">생성할 문구 갯수를 정하고 입력하세요.</p>
             
             <div className="space-y-4">

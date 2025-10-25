@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Phrase Copier",
-  "description": "An application to create a list of up to 20 phrases, each with a 30-character limit, and copy them all at once.",
+  "name": "포토북 문구 생성",
+  "description": "포토북에 사용할 문구를 생성하고 한번에 복사하는 어플리케이션입니다.",
   "requestFramePermissions": []
 }
