@@ -19,6 +19,8 @@ const ResetIcon: React.FC<{ className?: string }> = ({ className }) => (
 const App: React.FC = () => {
     const [count, setCount] = useState<number>(5);
     const [phrases, setPhrases] = useState<string[]>([]);
+    const [anniversaryDate, setAnniversaryDate] = useState<string>('');
+    const [coverPhrases, setCoverPhrases] = useState<string[]>(['', '']);
     const [showInputs, setShowInputs] = useState<boolean>(false);
     const [copySuccess, setCopySuccess] = useState<string>('');
 
@@ -30,6 +32,8 @@ const App: React.FC = () => {
     const handleReset = useCallback(() => {
         setCount(5);
         setPhrases([]);
+        setAnniversaryDate('');
+        setCoverPhrases(['', '']);
         setShowInputs(false);
         setCopySuccess('');
     }, []);
@@ -41,9 +45,50 @@ const App: React.FC = () => {
             setPhrases(newPhrases);
         }
     };
+    
+    const handleAnniversaryDateChange = (value: string) => {
+        if (value.length <= MAX_LENGTH) {
+            setAnniversaryDate(value);
+        }
+    };
+
+    const handleCoverPhraseChange = (index: number, value: string) => {
+        if (value.length <= MAX_LENGTH) {
+            const newCoverPhrases = [...coverPhrases];
+            newCoverPhrases[index] = value;
+            setCoverPhrases(newCoverPhrases);
+        }
+    };
 
     const handleCopyAll = useCallback(() => {
-        const textToCopy = phrases.filter(p => p.trim() !== '').join('\n');
+        const sections: string[][] = [];
+
+        // Section 1: Anniversary Date
+        const anniversaryText = anniversaryDate.trim();
+        if (anniversaryText) {
+            sections.push([anniversaryText]);
+        }
+
+        // Section 2: Cover Phrases
+        const coverTexts = coverPhrases
+            .map(p => p.trim())
+            .filter(Boolean);
+        if (coverTexts.length > 0) {
+            sections.push(coverTexts);
+        }
+        
+        // Section 3: Main Phrases
+        const mainTexts = phrases
+            .map((phrase, index) => phrase.trim() ? `${index + 1}. ${phrase.trim()}` : null)
+            .filter((p): p is string => p !== null);
+
+        if (mainTexts.length > 0) {
+            sections.push(mainTexts);
+        }
+        
+        // Join sections with double newlines, and lines within sections with single newlines.
+        const textToCopy = sections.map(section => section.join('\n')).join('\n\n');
+
         if (textToCopy) {
             navigator.clipboard.writeText(textToCopy).then(() => {
                 setCopySuccess('✅ 전체 복사 완료!');
@@ -56,7 +101,7 @@ const App: React.FC = () => {
             setCopySuccess('복사할 문구가 없습니다.');
             setTimeout(() => setCopySuccess(''), 2000);
         }
-    }, [phrases]);
+    }, [anniversaryDate, coverPhrases, phrases]);
 
     const renderSetupScreen = () => (
         <div className="w-full max-w-md mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 text-center space-y-6 animate-fade-in">
@@ -90,7 +135,7 @@ const App: React.FC = () => {
     const renderInputScreen = () => (
         <div className="w-full max-w-2xl mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 animate-fade-in-scale">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">문구 입력 ({phrases.length}개)</h2>
+                <h2 className="text-2xl font-bold text-white">사진 문구 입력</h2>
                 <button
                     onClick={handleReset}
                     className="flex items-center gap-2 bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-lg hover:bg-slate-600 focus:outline-none focus:ring-4 focus:ring-slate-500 transition-all duration-300"
@@ -101,22 +146,68 @@ const App: React.FC = () => {
                 </button>
             </div>
             
-            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                {phrases.map((phrase, index) => (
-                    <div key={index} className="relative">
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                {/* Anniversary Date Section */}
+                <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-slate-200">기념일 날짜</h3>
+                    <div className="relative">
                         <input
                             type="text"
-                            value={phrase}
-                            onChange={(e) => handlePhraseChange(index, e.target.value)}
-                            placeholder={`문구 ${index + 1} (최대 ${MAX_LENGTH}자)`}
+                            value={anniversaryDate}
+                            onChange={(e) => handleAnniversaryDateChange(e.target.value)}
+                            placeholder={`예: 2024.10.26 (최대 ${MAX_LENGTH}자)`}
                             maxLength={MAX_LENGTH}
                             className="w-full bg-slate-900 border-2 border-slate-700 text-white rounded-lg p-3 pr-16 focus:border-cyan-500 focus:ring-cyan-500 outline-none transition-colors"
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
-                            {phrase.length}/{MAX_LENGTH}
+                            {anniversaryDate.length}/{MAX_LENGTH}
                         </span>
                     </div>
-                ))}
+                </div>
+
+                {/* Cover Phrase Section */}
+                <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-slate-200">표지 문구</h3>
+                    <div className="space-y-4">
+                        {coverPhrases.map((phrase, index) => (
+                            <div key={`cover-${index}`} className="relative">
+                                <input
+                                    type="text"
+                                    value={phrase}
+                                    onChange={(e) => handleCoverPhraseChange(index, e.target.value)}
+                                    placeholder={`표지 문구 ${index + 1} (최대 ${MAX_LENGTH}자)`}
+                                    maxLength={MAX_LENGTH}
+                                    className="w-full bg-slate-900 border-2 border-slate-700 text-white rounded-lg p-3 pr-16 focus:border-cyan-500 focus:ring-cyan-500 outline-none transition-colors"
+                                />
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                                    {phrase.length}/{MAX_LENGTH}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Main Phrases Section */}
+                <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-slate-200">사진 문구 입력 ({phrases.length}개)</h3>
+                    <div className="space-y-4">
+                        {phrases.map((phrase, index) => (
+                            <div key={index} className="relative">
+                                <input
+                                    type="text"
+                                    value={phrase}
+                                    onChange={(e) => handlePhraseChange(index, e.target.value)}
+                                    placeholder={`사진 문구 ${index + 1} (최대 ${MAX_LENGTH}자)`}
+                                    maxLength={MAX_LENGTH}
+                                    className="w-full bg-slate-900 border-2 border-slate-700 text-white rounded-lg p-3 pr-16 focus:border-cyan-500 focus:ring-cyan-500 outline-none transition-colors"
+                                />
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                                    {phrase.length}/{MAX_LENGTH}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
             
             <div className="mt-8">
@@ -149,6 +240,20 @@ const App: React.FC = () => {
                 }
                 .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
                 .animate-fade-in-scale { animation: fade-in-scale 0.5s ease-out forwards; }
+
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #1e293b; /* slate-800 */
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #475569; /* slate-600 */
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #64748b; /* slate-500 */
+                }
             `}</style>
             {showInputs ? renderInputScreen() : renderSetupScreen()}
         </main>
